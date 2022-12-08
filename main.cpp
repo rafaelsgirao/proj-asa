@@ -8,6 +8,7 @@ int readSize(int &lines, int &cols) {
     return 0;
 }
 
+//teste//
 int main() {
     int lines;
     int cols;
