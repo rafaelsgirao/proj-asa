@@ -5,6 +5,7 @@ pkgs.mkShell {
       cmake
       gdb
       gcc9
+      valgrind
       clang-tools
     ];
 }
