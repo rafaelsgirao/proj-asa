@@ -1,4 +1,4 @@
-CFLAGS = -std=c++11 -O3 -Wall
+CFLAGS = -std=c++11 -O3 -Wall -g
 
 all: main
 
