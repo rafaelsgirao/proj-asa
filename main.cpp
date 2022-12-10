@@ -9,7 +9,9 @@ struct square {
 };
 typedef struct square Square;
 
-#define Matrix vector<vector<Square *>>
+#define Line vector<Square *>
+#define Matrix vector<Line>
+
 #define uint uint
 
 // define FILLED_SQ 1
@@ -40,20 +42,18 @@ itself
 
 */
 struct node {
-    int line_nr;
-
+    uint line_nr;
     struct node *parent;
-    vector<int> prevLine;
-    vector<int> line_state;
-    // struct node* next;
+    Line prevLine;
     vector<struct node *> children;
 };
 
 typedef struct node Node;
 
-Node *createNode() {
+Node *createNode(uint line_nr) {
     Node *node = (Node *)malloc(sizeof(Node));
     node->parent = NULL;
+    node->line_nr = line_nr;
     return node;
 }
 
@@ -79,26 +79,28 @@ void Ananas(vector<int> line) {
 }
 
 // Receives a Node, constructs all possible states for that line
-void getPossibleStates(Node *node, vector<int> *line) {
+void getPossibleStates(Node *node, Line *lineptr) {
 
     // For every empty square or set of squares, if we can choose placing a
     // square, we can also choose NOT placing said square. for every choice we
     // get, we have to duplicate said vector and call this function again.
+    Line line = *lineptr;
     uint prevLineSize = node->prevLine.size();
-    uint lineSize = line->size();
-    uint max_length = line->size() > node->prevLine.size()
-                          ? line->size()
+    uint lineSize = line.size();
+    uint max_length = line.size() > node->prevLine.size()
+                          ? line.size()
                           : node->prevLine.size();
 
     // Check for incomplete PartialSquares, fill next line in them
-    for (int sq = 0; sq < prevLineSize; sq++) {
-        if (0 == 0) {
+    for (int sq_i = 0; sq_i < prevLineSize; sq_i++) {
+        if (line[0] == &INVALID_SQ) {
+            return;
         }
     };
     return;
 }
 
-void auxGetPossibleStates(Node *node, vector<int> *line) {}
+void auxGetPossibleStates(Node *node, Line *line) {}
 
 // Calculate largest square that can fit inside the path
 int getLargestSquare(Matrix matrix) {
@@ -140,7 +142,7 @@ Matrix initMatrix(uint lines, uint cols) {
     }
     // Print the new matrix
     cout << "DEBUG: The new matrix is: " << endl;
-    for (vector<Square *> line : matrix) {
+    for (Line line : matrix) {
         for (Square *sq : line) {
             cout << sq->size << "    ";
         }
@@ -163,9 +165,11 @@ int main() {
     getLargestSquare(matrix);
 
     // Create root of our possibilities (which corresponds to first line)
-    Node *root = createNode();
+    Node *root = createNode(0);
 
     // Get the largest possible square we can fit (given by the diagonal)
+    Line line = matrix[0];
+    getPossibleStates(root, &line);
     // int result = calculatePossibilities(0, root); //FIXME
     int result = 0;
     cout << "DEBUG: result = " << result;
