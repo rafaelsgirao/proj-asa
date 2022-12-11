@@ -1,7 +1,7 @@
 using namespace std;
+#include "main.h"
 #include <iostream>
 #include <vector>
-#include "main.h"
 
 // Global variables.
 int largest_square = 0;
@@ -13,8 +13,15 @@ Matrix matrix;
 //  E.g a PartialSquare could be a 3x3 square, then size = 3 and curl_line would
 //  be either 1, 2 or 3
 
+// Square utils.
+Square createSquare(uint size, uint cur_line) {
+    Square sq = {size, cur_line};
+    return sq;
+}
+
 Square INVALID_SQ = {-1, -1}; // A square where we can't ladrilhate
 Square EMPTY_SQ = {0, 0};
+
 /*
 A node is a struct that holds
 - the current line number
@@ -42,7 +49,6 @@ int readSize(uint &lines, uint &cols) {
     cin >> cols;
     return 0;
 }
-
 
 // On each iteration, we look at the node's prevLine, get the corresponding line
 // on the matrix and see what it's most empty state can be.
@@ -95,7 +101,36 @@ void makeTree(Node *node) {
     return;
 }
 
+// Receives a Node, constructs all possible states for that line
+void getPossibleStates(Node *node, Line *lineptr) {
 
+    // For every empty square or set of squares, if we can choose placing a
+    // square, we can also choose NOT placing said square. for every choice we
+    // get, we have to duplicate said vector and call this function again.
+    // To check, but I think that our end result will be the number of times we
+    // branch out.
+    Line line = *lineptr;
+    uint prevLineSize = node->prevLine.size();
+    uint lineSize = line.size();
+    uint max_length = line.size() > node->prevLine.size()
+                          ? line.size()
+                          : node->prevLine.size();
+
+    // Check for incomplete PartialSquares, fill next line in them
+    for (int sq_i = 0; sq_i < lineSize; sq_i++) {
+    }
+}
+
+// Receives a line and a position in the line.
+//  Places a new square of size square_size, starting at sq_start_pos.
+void placeNewSquare(Line *lineptr, uint square_size, uint sq_start_pos) {
+    Line line = *lineptr;
+    Square newSquare = createSquare(square_size, 1);
+    for (int i = 0; i < square_size; i++) {
+        line[sq_start_pos] = &newSquare;
+    }
+    return;
+}
 
 void auxGetPossibleStates(Node *node, Line *line) {}
 
