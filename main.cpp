@@ -1,7 +1,7 @@
 using namespace std;
-#include "main.h"
 #include <iostream>
 #include <vector>
+#include "main.h"
 
 // Global variables.
 int largest_square = 0;
@@ -21,6 +21,7 @@ Square createSquare(uint size, uint cur_line) {
 
 Square INVALID_SQ = {-1, -1}; // A square where we can't ladrilhate
 Square EMPTY_SQ = {0, 0};
+
 
 /*
 A node is a struct that holds
@@ -49,6 +50,7 @@ int readSize(uint &lines, uint &cols) {
     cin >> cols;
     return 0;
 }
+
 
 // On each iteration, we look at the node's prevLine, get the corresponding line
 // on the matrix and see what it's most empty state can be.
@@ -102,14 +104,13 @@ void makeTree(Node *node) {
 }
 
 // Receives a Node, constructs all possible states for that line
-void getPossibleStates(Node *node, Line *lineptr) {
+void getPossibleStates(Node *node, Line line) { //TODO: is line a copy or passed by reference?
+    
 
     // For every empty square or set of squares, if we can choose placing a
     // square, we can also choose NOT placing said square. for every choice we
     // get, we have to duplicate said vector and call this function again.
-    // To check, but I think that our end result will be the number of times we
-    // branch out.
-    Line line = *lineptr;
+    // To check, but I think that our end result will be the number of times we branch out.
     uint prevLineSize = node->prevLine.size();
     uint lineSize = line.size();
     uint max_length = line.size() > node->prevLine.size()
@@ -117,20 +118,53 @@ void getPossibleStates(Node *node, Line *lineptr) {
                           : node->prevLine.size();
 
     // Check for incomplete PartialSquares, fill next line in them
-    for (int sq_i = 0; sq_i < lineSize; sq_i++) {
+    uint sq_i = 0;
+    uint count = 0;
+    //The secret sauce.
+    while(sq_i < lineSize) {
+        Square *val = line[sq_i];
+        //Attempt to see what's the largest square we can place
+        if (val == &EMPTY_SQ) {
+            count++;
+            sq_i++;
+            continue;
+        }
+        //We've reached an invalid square. Can we build squares where we saw an empty spot??       
+        if (count == 0) {
+            //No, we can't.
+            sq_i++;
+            continue;
+        }
+
     }
+
+    /*
+    for (int sq_i = 0; sq_i < lineSize; sq_i++) {
+        for 
+        //Note for future self:
+        TODO HERE
+          Iterate through line, find all squares of all sizes we can place in here.
+          For every square we can place, we're going to branch into two possibilities:
+          We're NOT going to place the square on one on the branches, and we're going to on the other.
+          We're going to end up with two copies of Line - one where we put the square and continue
+          To avoid an infinite recursion, we mark the branch line where we don't WANT to place a square there
+          as invalid squares.
+        
+    }
+    */
 }
 
-// Receives a line and a position in the line.
-//  Places a new square of size square_size, starting at sq_start_pos.
+//Receives a line and a position in the line.
+// Places a new square of size square_size, starting at sq_start_pos.
 void placeNewSquare(Line *lineptr, uint square_size, uint sq_start_pos) {
-    Line line = *lineptr;
+    Line line = * lineptr;
     Square newSquare = createSquare(square_size, 1);
-    for (int i = 0; i < square_size; i++) {
+    for (int i=0; i < square_size; i++) {
         line[sq_start_pos] = &newSquare;
     }
     return;
 }
+
 
 void auxGetPossibleStates(Node *node, Line *line) {}
 
