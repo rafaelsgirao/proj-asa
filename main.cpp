@@ -1,25 +1,7 @@
 using namespace std;
 #include <iostream>
 #include <vector>
-
-// Constants.
-struct square {
-    uint size;     // Size of square we're building (or have built)
-    uint cur_line; // Current line
-};
-typedef struct square Square;
-
-Square createSquare(uint size, uint cur_line) {
-    Square sq = {size, cur_line};
-    return sq;
-}
-
-#define Line vector<Square *>
-#define Matrix vector<Line>
-
-#define uint uint
-
-// define FILLED_SQ 1
+#include "main.h"
 
 // Global variables.
 int largest_square = 0;
@@ -46,14 +28,6 @@ initial state, line_nr = 0 and whose children are all possible states for line 0
 itself
 
 */
-struct node {
-    uint line_nr;
-    struct node *parent;
-    Line prevLine;
-    vector<struct node *> children;
-};
-
-typedef struct node Node;
 
 Node *createNode(uint line_nr) {
     Node *node = (Node *)malloc(sizeof(Node));
@@ -69,37 +43,6 @@ int readSize(uint &lines, uint &cols) {
     return 0;
 }
 
-// Calculate the number and the ways of filling a list with edges of the squares
-
-void initAnanas(vector<int> origLine) {
-    uint origLineSize = origLine.size();
-    vector<int> tmp_line;
-    for (int i = 0; i < origLineSize; i++) {
-        // Copy vector line but limit size to i
-        vector<int> tmp_line(origLine.begin(), origLine.begin() + i);
-    }
-}
-void Ananas(vector<int> line) {
-    return; // FIXME implement
-}
-
-// Receives a Node, constructs all possible states for that line
-void getPossibleStates(Node *node, Line *lineptr) {
-
-    // For every empty square or set of squares, if we can choose placing a
-    // square, we can also choose NOT placing said square. for every choice we
-    // get, we have to duplicate said vector and call this function again.
-    Line line = *lineptr;
-    uint prevLineSize = node->prevLine.size();
-    uint lineSize = line.size();
-    uint max_length = line.size() > node->prevLine.size()
-                          ? line.size()
-                          : node->prevLine.size();
-
-    // Check for incomplete PartialSquares, fill next line in them
-    for (int sq_i = 0; sq_i < prevLineSize; sq_i++) {
-    }
-}
 
 // On each iteration, we look at the node's prevLine, get the corresponding line
 // on the matrix and see what it's most empty state can be.
