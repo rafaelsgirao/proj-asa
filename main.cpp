@@ -1,4 +1,6 @@
 using namespace std;
+
+#include <algorithm>
 #include <iostream>
 #include <vector>
 #include "main.h"
@@ -21,7 +23,6 @@ Square createSquare(uint size, uint cur_line) {
 
 Square INVALID_SQ = {-1, -1}; // A square where we can't ladrilhate
 Square EMPTY_SQ = {0, 0};
-
 
 /*
 A node is a struct that holds
@@ -50,7 +51,6 @@ int readSize(uint &lines, uint &cols) {
     cin >> cols;
     return 0;
 }
-
 
 // On each iteration, we look at the node's prevLine, get the corresponding line
 // on the matrix and see what it's most empty state can be.
@@ -95,7 +95,7 @@ void makeTree(Node *node) {
     }
     // Now that we have a line with hard requirements from prevLine, we can
     // build all possible states
-    getPossibleStates(node, &curLine);
+    getPossibleStates(node, curLine);
 
     for (Node *child : node->children) {
         makeTree(child);
@@ -103,14 +103,71 @@ void makeTree(Node *node) {
     return;
 }
 
+// Memory Programming
+vector<vector<int>> dp;
+
+int calcNumberToAdd(int squareLength) {
+    int times = squareLength;
+    int result = 0;
+    for (times; times > 0; times--) {
+        result = result * 10 + squareLength;
+    }
+    return result;
+}
+
+int calcLineOfNumber(int id) {
+    int line = 0;
+    for (; id > 0; id / 10) {
+        line++;
+    }
+    return line;
+}
+
+bool idInCache(int count) {
+    int lineOfId = calcLineOfNumber(count);
+    if (find(dp[lineOfId].begin(), dp[lineOfId].end(), count) !=
+        dp[lineOfId].end()) {
+        return true;
+    }
+    return false;
+}
+
+/*
+
+*/
+int f(int curr_cols, int count) {
+    int solution = 0;
+    if (curr_cols > count) {
+        return 0;
+    }
+
+    for (int square_length = 1; square_length <= curr_cols; square_length++) {
+        solution =
+            solution * (10 ^ square_length) + calcNumberToAdd(square_length);
+        if (idInCache(solution) == true) {
+            solution = solution / (10 ^ square_length);
+            continue;
+        }
+        if ((square_length + curr_cols > count)) {
+            break;
+        }
+        dp[curr_cols].push_back(solution);
+
+        f(curr_cols + square_length, count);
+        break;
+    }
+    return 0;
+}
+
 // Receives a Node, constructs all possible states for that line
-void getPossibleStates(Node *node, Line line) { //TODO: is line a copy or passed by reference?
-    
+void getPossibleStates(
+    Node *node, Line line) { // TODO: is line a copy or passed by reference?
 
     // For every empty square or set of squares, if we can choose placing a
     // square, we can also choose NOT placing said square. for every choice we
     // get, we have to duplicate said vector and call this function again.
-    // To check, but I think that our end result will be the number of times we branch out.
+    // To check, but I think that our end result will be the number of times we
+    // branch out.
     uint prevLineSize = node->prevLine.size();
     uint lineSize = line.size();
     uint max_length = line.size() > node->prevLine.size()
@@ -120,51 +177,61 @@ void getPossibleStates(Node *node, Line line) { //TODO: is line a copy or passed
     // Check for incomplete PartialSquares, fill next line in them
     uint sq_i = 0;
     uint count = 0;
-    //The secret sauce.
-    while(sq_i < lineSize) {
+    // The secret sauce.
+    while (sq_i < lineSize) {
         Square *val = line[sq_i];
-        //Attempt to see what's the largest square we can place
+        // Attempt to see what's the largest square we can place
         if (val == &EMPTY_SQ) {
             count++;
             sq_i++;
             continue;
         }
-        //We've reached an invalid square. Can we build squares where we saw an empty spot??       
+        // We've reached an invalid square. Can we build squares where we saw an
+        // empty spot??
         if (count == 0) {
-            //No, we can't.
+            // No, we can't.
             sq_i++;
             continue;
         }
-
+        if (count == 1) {
+            Square newSquare = createSquare(1, 1);
+            line[sq_i] = &newSquare;
+            sq_i++;
+            continue;
+        }
+        // Yes, we can! Fork our path
+        if (count > 1 && val->size > 1) {
+            f(1, count);
+        }
     }
 
     /*
     for (int sq_i = 0; sq_i < lineSize; sq_i++) {
-        for 
+        for
         //Note for future self:
         TODO HERE
-          Iterate through line, find all squares of all sizes we can place in here.
-          For every square we can place, we're going to branch into two possibilities:
-          We're NOT going to place the square on one on the branches, and we're going to on the other.
-          We're going to end up with two copies of Line - one where we put the square and continue
-          To avoid an infinite recursion, we mark the branch line where we don't WANT to place a square there
-          as invalid squares.
-        
+          Iterate through line, find all squares of all sizes we can place in
+    here. For every square we can place, we're going to branch into two
+    possibilities: We're NOT going to place the square on one on the branches,
+    and we're going to on the other. We're going to end up with two copies of
+    Line - one where we put the square and continue To avoid an infinite
+    recursion, we mark the branch line where we don't WANT to place a square
+    there as invalid squares.
+
     }
     */
 }
 
-//Receives a line and a position in the line.
-// Places a new square of size square_size, starting at sq_start_pos.
+// Receives a line and a position in the line.
+//  Places a new square of size square_size, starting at sq_start_pos.
 void placeNewSquare(Line *lineptr, uint square_size, uint sq_start_pos) {
-    Line line = * lineptr;
+    Line line = *lineptr;
     Square newSquare = createSquare(square_size, 1);
-    for (int i=0; i < square_size; i++) {
+    for (int i = 0; i < square_size; i++) {
         line[sq_start_pos] = &newSquare;
     }
     return;
 }
-
 
 void auxGetPossibleStates(Node *node, Line *line) {}
 
@@ -228,9 +295,13 @@ int main() {
     // Get the largest possible square we can fit (given by the diagonal)
     Line line = matrix[0];
     root->prevLine = line;
-    getPossibleStates(root, &line);
+    getPossibleStates(root, line);
     // int result = calculatePossibilities(0, root); //FIXME
     int result = 0;
-    cout << "DEBUG: result = " << result;
+    cout << "DEBUG: result = " << result << endl;
+    
+    f(1, 3);
+    cout << dp[3][1] << endl;
+    
     return 0;
 }

@@ -1,7 +1,11 @@
+#include <algorithm>
+#include <iostream>
+#include <vector>
+
 #define Line vector<Square *>
 #define Matrix vector<Line>
 
-#define uint uint
+//#define uint unsigned int
 
 
 // Structs.
@@ -22,5 +26,4 @@ typedef struct node Node;
 
 // Function definitions.
 
-void getPossibleStates(Node *node, Line *lineptr);
-
+void getPossibleStates(Node *node, Line line) ;
