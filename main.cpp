@@ -4,10 +4,15 @@ using namespace std;
 
 // Constants.
 struct square {
-    int size;     // Size of square we're building (or have built)
-    int cur_line; // Current line
+    uint size;     // Size of square we're building (or have built)
+    uint cur_line; // Current line
 };
 typedef struct square Square;
+
+Square createSquare(uint size, uint cur_line) {
+    Square sq = {size, cur_line};
+    return sq;
+}
 
 #define Line vector<Square *>
 #define Matrix vector<Line>
@@ -93,12 +98,61 @@ void getPossibleStates(Node *node, Line *lineptr) {
 
     // Check for incomplete PartialSquares, fill next line in them
     for (int sq_i = 0; sq_i < prevLineSize; sq_i++) {
-        if (line[0] == &INVALID_SQ) {
-            return;
+    }
+}
+
+// On each iteration, we look at the node's prevLine, get the corresponding line
+// on the matrix and see what it's most empty state can be.
+void makeTree(Node *node) {
+    // If size = matrix size +1, we quit (in other words, if prevLine is the
+    // last line)
+    if (node->line_nr + 1 == matrix.size()) {
+        return;
+    }
+    Line curLine = matrix[node->line_nr];
+    Line prevLine = node->prevLine;
+    uint max_length =
+        curLine.size() > prevLine.size() ? curLine.size() : prevLine.size();
+
+    uint sq_i = 0;
+    uint prevLineSize = prevLine.size();
+
+    // Make up the initial state of the line, given previous line's state
+    // Fill current line with requirements from previous line (i.e
+    // continue/finish incomplete squares)
+    while (sq_i < prevLineSize) {
+        // Check if there's a square at current pointer in previous line
+        if (prevLine[sq_i] != &EMPTY_SQ && prevLine[sq_i] != &INVALID_SQ) {
+            // If so, is it unfinished?
+            Square prevSquare = *prevLine[sq_i];
+            if (prevSquare.size == prevSquare.cur_line) {
+                // Square we saw is finished, move to first square after it
+                sq_i += prevSquare.size; // Skip whole square
+                continue;
+            } else {
+                // Square we saw isn't finished - build next line!
+                Square newSquareLine =
+                    createSquare(prevSquare.size, prevSquare.cur_line + 1);
+                for (int i = 0; i < prevSquare.size; i++) {
+                    curLine[sq_i] = &newSquareLine;
+                    sq_i++;
+                }
+                continue; // Skip newly created block
+            }
         }
-    };
+        sq_i++;
+    }
+    // Now that we have a line with hard requirements from prevLine, we can
+    // build all possible states
+    getPossibleStates(node, &curLine);
+
+    for (Node *child : node->children) {
+        makeTree(child);
+    }
     return;
 }
+
+
 
 void auxGetPossibleStates(Node *node, Line *line) {}
 
@@ -116,14 +170,6 @@ int getLargestSquare(Matrix matrix) {
     printf("DEBUG: Largest square is %d\n", largest_square);
     return largest_square;
 }
-
-// Cut off a branch of our tree.
-/*
-void destroyNode(Node *node) {
-    Node *node
-    for (Node )
-}
-*/
 
 Matrix initMatrix(uint lines, uint cols) {
     // Create a matrix of size lines x cols, initialized w/ empty squares
@@ -169,6 +215,7 @@ int main() {
 
     // Get the largest possible square we can fit (given by the diagonal)
     Line line = matrix[0];
+    root->prevLine = line;
     getPossibleStates(root, &line);
     // int result = calculatePossibilities(0, root); //FIXME
     int result = 0;
