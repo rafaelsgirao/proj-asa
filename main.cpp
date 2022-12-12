@@ -3,6 +3,7 @@ using namespace std;
 #include <algorithm>
 #include <iostream>
 #include <vector>
+#include <math.h>
 #include "main.h"
 
 // Global variables.
@@ -95,7 +96,8 @@ void makeTree(Node *node) {
     }
     // Now that we have a line with hard requirements from prevLine, we can
     // build all possible states
-    getPossibleStates(node, curLine);
+
+    //getPossibleStates(node, curLine);
 
     for (Node *child : node->children) {
         makeTree(child);
@@ -104,63 +106,93 @@ void makeTree(Node *node) {
 }
 
 // Memory Programming
-vector<vector<int>> dp;
 
-int calcNumberToAdd(int squareLength) {
-    int times = squareLength;
-    int result = 0;
-    for (times; times > 0; times--) {
-        result = result * 10 + squareLength;
+//vector<vector<int>> dp;
+long long int dp[100][100];
+
+// Funçao que susbititui o push_back no vector
+void add(int line,long long int number){
+    for(int i=0;i<sizeof(dp[line][0]);i++){
+        if(dp[line][i]==0){
+            dp[line][i]=number;
+            return;
+        } 
     }
-    return result;
+    return;
 }
-
-int calcLineOfNumber(int id) {
+// Memory Programming
+int calcLineOfNumber(long long int id) {
     int line = 0;
-    for (; id > 0; id / 10) {
+    while(id!=0) {
         line++;
+        id=id/10;
     }
     return line;
 }
 
-bool idInCache(int count) {
-    int lineOfId = calcLineOfNumber(count);
-    if (find(dp[lineOfId].begin(), dp[lineOfId].end(), count) !=
-        dp[lineOfId].end()) {
-        return true;
+int calcNumberToAdd(int squareLength) {
+    int times = squareLength;
+    int lengthNumber= calcLineOfNumber(squareLength);
+    int result = 0;
+    for (times; times > 0; times--) {
+        
+        result = result * pow(10,lengthNumber) + squareLength;
     }
+    return result;
+}
+
+
+
+bool idInCache(long long int count) {
+    long long int lineOfId = calcLineOfNumber(count);
+    
+
+    for(int i=0;i<sizeof(dp[lineOfId]);i++){
+        if(dp[lineOfId][i]==0)
+            return false;
+        if(dp[lineOfId][i]==count)
+            return true;
+    }
+    //if (find(dp[lineOfId].begin(), dp[lineOfId].end(), count) !=
+      //  dp[lineOfId].back()) {
     return false;
 }
+
 
 /*
 
 */
-int f(int curr_cols, int count) {
-    int solution = 0;
+int f(int curr_cols, int count,long long int solution) {
     if (curr_cols > count) {
         return 0;
     }
 
-    for (int square_length = 1; square_length <= curr_cols; square_length++) {
+    for (int square_length = 1; square_length <= count; square_length++) {
         solution =
-            solution * (10 ^ square_length) + calcNumberToAdd(square_length);
+            solution * pow(10,square_length) + calcNumberToAdd(square_length);
+        //Square squareToAdd= createSquare(square_length,0); //NEW
+        
         if (idInCache(solution) == true) {
-            solution = solution / (10 ^ square_length);
+            cout<< solution << endl;
+            cout<< "OLE" << endl;
+            f(curr_cols+square_length,count,solution);
             continue;
         }
         if ((square_length + curr_cols > count)) {
-            break;
+            return 1;
         }
-        dp[curr_cols].push_back(solution);
+        cout<<solution<< endl;
+        //dp[curr_cols+square_length].push_back(solution);
+        add(curr_cols+square_length,solution);
 
-        f(curr_cols + square_length, count);
-        break;
+        f(curr_cols + square_length, count,solution);
+        solution=solution / pow(10,square_length);
     }
     return 0;
 }
 
 // Receives a Node, constructs all possible states for that line
-void getPossibleStates(
+ void getPossibleStates(
     Node *node, Line line) { // TODO: is line a copy or passed by reference?
 
     // For every empty square or set of squares, if we can choose placing a
@@ -201,7 +233,7 @@ void getPossibleStates(
         }
         // Yes, we can! Fork our path
         if (count > 1 && val->size > 1) {
-            f(1, count);
+            f(1, count,0);
         }
     }
 
@@ -279,10 +311,10 @@ Matrix initMatrix(uint lines, uint cols) {
 int main() {
     uint lines;
     uint cols;
-
+    
     // Read size of matrix dimensions
     readSize(lines, cols);
-
+    
     // Create matrix
     Matrix matrix = initMatrix(lines, cols);
 
@@ -295,12 +327,14 @@ int main() {
     // Get the largest possible square we can fit (given by the diagonal)
     Line line = matrix[0];
     root->prevLine = line;
-    getPossibleStates(root, line);
+
+    //getPossibleStates(root, line);        
+    
     // int result = calculatePossibilities(0, root); //FIXME
     int result = 0;
     cout << "DEBUG: result = " << result << endl;
     
-    f(1, 3);
+    f(0, cols,0);
     cout << dp[3][1] << endl;
     
     return 0;
