@@ -24,6 +24,8 @@ Square createSquare(uint size, uint cur_line) {
 Square INVALID_SQ = {-1, -1}; // A square where we can't ladrilhate
 Square EMPTY_SQ = {0, 0};
 
+HyperMatrix dp_rg;
+
 /*
 A node is a struct that holds
 - the current line number
@@ -103,61 +105,6 @@ void makeTree(Node *node) {
     return;
 }
 
-// Memory Programming
-vector<vector<int>> dp;
-
-int calcNumberToAdd(int squareLength) {
-    int times = squareLength;
-    int result = 0;
-    for (times; times > 0; times--) {
-        result = result * 10 + squareLength;
-    }
-    return result;
-}
-
-int calcLineOfNumber(int id) {
-    int line = 0;
-    for (; id > 0; id / 10) {
-        line++;
-    }
-    return line;
-}
-
-bool idInCache(int count) {
-    int lineOfId = calcLineOfNumber(count);
-    if (find(dp[lineOfId].begin(), dp[lineOfId].end(), count) !=
-        dp[lineOfId].end()) {
-        return true;
-    }
-    return false;
-}
-
-/*
-
-*/
-int f(int curr_cols, int count) {
-    int solution = 0;
-    if (curr_cols > count) {
-        return 0;
-    }
-
-    for (int square_length = 1; square_length <= curr_cols; square_length++) {
-        solution =
-            solution * (10 ^ square_length) + calcNumberToAdd(square_length);
-        if (idInCache(solution) == true) {
-            solution = solution / (10 ^ square_length);
-            continue;
-        }
-        if ((square_length + curr_cols > count)) {
-            break;
-        }
-        dp[curr_cols].push_back(solution);
-
-        f(curr_cols + square_length, count);
-        break;
-    }
-    return 0;
-}
 
 // Receives a Node, constructs all possible states for that line
 void getPossibleStates(
@@ -201,7 +148,7 @@ void getPossibleStates(
         }
         // Yes, we can! Fork our path
         if (count > 1 && val->size > 1) {
-            f(1, count);
+            //RG FIXME: look here
         }
     }
 
@@ -236,7 +183,7 @@ void placeNewSquare(Line *lineptr, uint square_size, uint sq_start_pos) {
 void auxGetPossibleStates(Node *node, Line *line) {}
 
 // Calculate largest square that can fit inside the path
-int getLargestSquare(Matrix matrix) {
+int getLargestSquare() {
     uint line = matrix.size() - 1;
     uint col = 0;
     printf("Line %d, col %d\n", line, col);
@@ -250,10 +197,56 @@ int getLargestSquare(Matrix matrix) {
     return largest_square;
 }
 
-Matrix initMatrix(uint lines, uint cols) {
+void printMatrix() {
+    // Print the new matrix
+    cout << "DEBUG: The new matrix is: " << endl;
+    for (Line line : matrix) {
+        for (Square *sq : line) {
+            cout << sq->size << " ";
+        }
+        cout << endl;
+    }
+}
+
+//Para um dado n, em que n são n espaços vazios contínuos, devolver cenas
+//Uma função que queira possibilidades para k espaço livres contínuos, chama esta função
+//e de seguida pode aceder a dp_rg[k]
+void getEmptySpacePossibilities(int n) {
+    if (dp_rg.size() >= n) {
+        return;
+    }
+    if (n == 1) {
+        Line newLine;
+        Square newSq = createSquare(1, 1);
+        newLine.push_back(&newSq);
+        Matrix n_1_possibility;
+        n_1_possibility.push_back(newLine);
+        dp_rg[1] = n_1_possibility;
+        return;
+    }
+    Matrix possibilities;
+    Line *prev_n_cases = getEmptySpacePossibilities(n-1);
+
+    //One of he posibilities is 
+    Square newSq = createSquare(n, 0);
+    Line newLine(n, &newSq);
+    possibilities.push_back()
+    //Caso do n ímpar (simples)
+    if (n % 2 != 0 ) {
+
+    }
+    
+}
+
+void initMatrix(uint lines, uint cols) {
     // Create a matrix of size lines x cols, initialized w/ empty squares
     // https://stackoverflow.com/questions/65646403/initialization-of-vector-of-vectors
-    Matrix matrix(lines, vector<Square *>(cols, &INVALID_SQ));
+    //Matrix matrix(lines, vector<Square *>(cols, &INVALID_SQ));
+        for (int i = 0; i < lines; i++) {
+            Line newLine(cols, &INVALID_SQ);
+            matrix.push_back(newLine);
+        }
+
 
     // Loop through columns
     int col_caminho = 0;
@@ -273,7 +266,7 @@ Matrix initMatrix(uint lines, uint cols) {
         }
         cout << endl;
     }
-    return matrix;
+    return;
 }
 
 int main() {
@@ -284,10 +277,10 @@ int main() {
     readSize(lines, cols);
 
     // Create matrix
-    Matrix matrix = initMatrix(lines, cols);
+    initMatrix(lines, cols);
 
     // Get largest square. Will be dumped to global variable.
-    getLargestSquare(matrix);
+    getLargestSquare();
 
     // Create root of our possibilities (which corresponds to first line)
     Node *root = createNode(0);
@@ -300,8 +293,6 @@ int main() {
     int result = 0;
     cout << "DEBUG: result = " << result << endl;
     
-    f(1, 3);
-    cout << dp[3][1] << endl;
     
     return 0;
 }

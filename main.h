@@ -4,6 +4,7 @@
 
 #define Line vector<Square *>
 #define Matrix vector<Line>
+#define HyperMatrix vector<Matrix>
 
 //#define uint unsigned int
 
@@ -26,4 +27,4 @@ typedef struct node Node;
 
 // Function definitions.
 
-void getPossibleStates(Node *node, Line line) ;
+void getPossibleStates(Node *node, Line line);
