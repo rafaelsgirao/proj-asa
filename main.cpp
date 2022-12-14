@@ -1,23 +1,43 @@
 using namespace std;
 
-#include "main.h"
 #include <algorithm>
 #include <iostream>
+#include <unordered_map>
 #include <vector>
 
+#define Line vector<int>
+#define Matrix vector<Line>
+
 vector<int> path;
-uint numberOfCases = 0;
+unordered_map<long long unsigned int, unsigned long int> cache;
+int lines;
+int cols;
 
 Matrix matrix;
 
+long long unsigned int hashVector(vector<int> path) {
+    long long unsigned int res = 1;
+    for (long unsigned int i = 1; i < path.capacity(); i++) {
+        res *= (res + 17) ^ path[i] ^ (path[i] * 1149);
+    }
+    // cout << res << endl;
+    return res;
+}
+
+ void printPath(vector<int> path){
+     for (long unsigned int i=0;i<path.capacity();i++)
+         cout << path[i] << " , ";
+     cout << endl;
+ }
+
 // Read matrix size
-int readSize(uint &lines, uint &cols) {
+int readSize(int &lines, int &cols) {
     cin >> lines;
     cin >> cols;
     return 0;
 }
 
-void printMatrix() {
+void printMatrix(Matrix matrix) {
     // Print the new matrix
     cout << "DEBUG: The new matrix is: " << endl;
     for (Line line : matrix) {
@@ -28,11 +48,11 @@ void printMatrix() {
     }
 }
 
-void initMatrix(int lines, uint cols) {
-    for (int i = 0; i < lines; i++) {
-        Line newLine(cols, 1);
-        matrix.push_back(newLine);
-    }
+void initMatrix(int lines, int cols) {
+    // for (int i = 0; i < lines; i++) {
+    //     Line newLine(cols, 1);
+    //     matrix.push_back(newLine);
+    // }
 
     // Loop through columns
     int col_caminho = 0;
@@ -40,71 +60,156 @@ void initMatrix(int lines, uint cols) {
 
         cin >> col_caminho;
         path.push_back(col_caminho);
-        for (int a = 0; a < col_caminho; a++) {
-            matrix[cur_line][a] = 0;
-        }
+        // for (int a = 0; a < col_caminho; a++) {
+        //     matrix[cur_line][a] = 0;
+        // }
     }
-    printMatrix();
+    // printMatrix();
 }
 
-void setSquare(int l, int c, int size, int color) {
-    for (int i = l; i < l + size; i++) {
-        for (int j = c; j < c + size; j++) {
-            matrix[i].at(j) = 1;
+// f(0, 0, 1)
+vector<int> findFirstEmptySquare(vector<int> path) {
+    vector<int> coord = {0, 0};
+    long unsigned int path_capacity = path.capacity();
+    for (long unsigned int j = 0; j < path_capacity; j++) {
+        if (path[j] - 1 > coord[0]) {
+            coord[0] = path[j] - 1;
+            coord[1] = j;
         }
     }
-    return;
+    return coord;
 }
 
-void addSquare(int l, int c, int size) { setSquare(l, c, size, 1); }
-void delSquare(int l, int c, int size) { setSquare(l, c, size, 0); }
+int findLargestSquare(vector<int> coord, vector<int> path) {
+    int x = coord[0];
+    int y = coord[1];
+    if (x == 0 && y == 0) {
+        return 0;
+    }
+    int result = 1;
+    bool go = true;
+    while (go) {
+        y++;
+        x--;
+        if (y > lines || x < 0) {
+            break;
+        }
+        if (path[y] - 1 < coord[0]) {
+            break;
+        }
+        if (path[y] - 1 == coord[0]) {
+            result++;
+        }
+    }
+    return result;
+}
 
-bool canAddSquare(int line, int cols, int size) {
-    for (int i = line; i < size + line; i++) {
-        for (int j = cols; j < size + cols; j++) {
-            if (matrix[i][j] == 1) {
-                return false;
-            }
+int findWhereIsTheSquare(vector<int> *coordptr) {
+    vector<int> coord = *coordptr;
+    // cout << "COLUNA : " << coord[0] << " ; LINHA: " <<coord[1] << endl;
+    return coord[1];
+}
+
+unsigned long int f(vector<int> *vectptr) {
+    vector<int> vector = *vectptr;
+    long long unsigned int hashed_value = hashVector(vector);
+    unsigned long int res = 0;
+    int largestSquare;
+    int locationOfSquare;
+    // FIX ME
+    // Dynamic Programming
+    if (cache.count(hashed_value)) {
+        return cache[hashed_value];
+        // return the value of the cache associated with vector
+    }
+    std::vector<int> square_loc = findFirstEmptySquare(vector);
+    locationOfSquare = findWhereIsTheSquare(&square_loc);
+    largestSquare = findLargestSquare(square_loc, vector);
+    if (largestSquare == 0) {
+        return 0;
+    }
+    for (int i = 1; i <= largestSquare; i++) {
+        int j = 0;
+        while (j < i) {
+            vector[locationOfSquare + j] = vector[locationOfSquare + j] - i;
+            j++;
+        }
+        j--;
+        if (i > 1)
+            res += f(&vector) + 1;
+        else
+            res += f(&vector);
+        while (j >= 0) {
+            vector[locationOfSquare + j] = vector[locationOfSquare + j] + i;
+            j--;
+        }
+    }
+    // add value and vector to cache
+    cache[hashed_value] = res;
+    return res;
+}
+
+bool pathZero(vector<int> path) {
+    long unsigned int path_capacity = path.capacity();
+    for (unsigned long int i = 0; i < path_capacity; i++) {
+        if (path[i] != 0) {
+            return false;
         }
     }
     return true;
 }
 
-// f(0, 0, 1)
 
-int f(int line, int col, int size) {
-    int rslt = 0;
-    while (rslt == 0) {
-        if (canAddSquare(line, col, size)) {
-            addSquare(line, col, size);
-            f(line + size, col + size, size);
-        }
-    }
+void changePath() {
+    long unsigned int cur_nr, prev_nr, res;
+    cur_nr = 0;
+    prev_nr = 0;
+    vector <int> newpath;
 
-    return rslt;
-}
-
-void calculatePossibilities(int c, int l) {
-    for (int i = 0; i < c; i++) {
-        for (int j = 0; j++; j++) {
-            if (matrix[i][j] == 0) {
-                setSquare(i, j, 1, 1);
+    for (long unsigned int i=0; i< path.size(); i++) {
+        cur_nr = path[i];
+        if (cur_nr != prev_nr) {
+            res = cur_nr - prev_nr;
+            for (long unsigned int j = 0; j < res; j++) {
+                newpath.push_back(lines - i);
             }
+            prev_nr = cur_nr;
         }
     }
-    return;
+    path = newpath;
+    
 }
+
 int main() {
-    uint lines;
-    uint cols;
 
     // Read size of matrix dimensions
     readSize(lines, cols);
 
+
     // Create matrix
     initMatrix(lines, cols);
-    printMatrix();
-    f(0, 0, 1);
-    cout << canAddSquare(0, 0, 1);
+
+    if (lines == 0 || cols == 0 || pathZero(path)) {
+        cout << 0 << endl;
+        return 0;
+    }
+   // cout << "PATH ANTIGO:" << endl;
+    //printPath(path);
+    if (lines > cols) {
+        changePath();
+    }
+   // cout << "PATH NOVO:" << endl;
+   // printPath(path);
+    int tmp = lines;
+    lines = cols;
+    cols = tmp;
+
+    //transposedcenas();
+    
+    if (lines > cols) {
+        //  changePath();
+        cols = lines;
+    }
+    cout << f(&path) + 1 << endl;
     return 0;
 }
