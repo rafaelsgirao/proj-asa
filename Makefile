@@ -13,3 +13,6 @@ fmt:
 
 run: main
 	./main
+
+dbg: main
+	valgrind ./main
