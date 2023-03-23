@@ -32,7 +32,7 @@ Então, como $O(V) < O(V+E) < O(E logE)$, conclui-se que o programa na sua total
 
 
 ## Avaliação Experimental dos Resultados
-O algoritmo foi analizado com a ferramenta de benchmarking `hyperfine` (descartando _outliers_). Os grafos foram gerados com o programa `dgg` (modificado para que todos os arcos tenham peso = 1), sendo $V+E \in [0.5M, 5M]$, não tendo ocorrido _outliers_.
+O algoritmo foi analizado com a ferramenta de benchmarking `hyperfine` (descartando _outliers_). Os grafos foram gerados com o programa `dgg` (modificado para que todos os arcos tenham peso = 1, para forçar o pior caso de _Kruskal_), sendo $V+E \in [0.5M, 5M]$, não tendo ocorrido _outliers_.
 ![](./grafico2.png)
 
-Observando o gráfico, dada a proximidade da complexidade teórica ($ElogE$) com a observada, fica assim comprovada a complexidade teórica.
+Observando o gráfico, dada a proximidade da complexidade teórica ($ElogE$) com a observada, fica assim comprovada a complexidade teórica declarada.
